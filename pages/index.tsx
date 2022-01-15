@@ -1,9 +1,30 @@
 import type { NextPage } from 'next'
+import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
+import Ballot from '../components/Home/Ballot'
+import { BallotType } from '../interface/BallotType'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 
 const Home: NextPage = () => {
+  const [ballots, setBallots] = useState<BallotType[]>([])
+  const [openModal, setOpenModal] = useState(false)
+  const [selected, setSelected] = useState({})
+
+  useEffect(() => {
+    getBallots().then(items => {
+      setBallots(items.items)
+    })
+  }, [])
+
+  const getBallots = () => {
+    return fetch("/api/ballots")
+      .then(data => data.json())
+  }
+  const changeSelected = (id: string, item: string) => {
+    setSelected({ ...selected, ...JSON.parse(`{"${id}": "${item}"}`) })
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -14,9 +35,25 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Good Luck!
+          Awards 2022
         </h1>
+        <div>
+          {ballots.length > 0 && ballots.map(ballot => 
+            <Ballot data={ballot} onChange={changeSelected} />
+          )}
+        </div>
+        <button className={styles.submit} onClick={() => setOpenModal(true)}>Submit</button>
       </main>
+
+      {openModal && 
+        <div className={styles.modal}>
+          <div className={styles.modal__content}>
+            <span className={styles.modal__close} onClick={() => setOpenModal(false)}>&times;</span>
+            <p>Success..</p>
+            <p>selected: {Object.values(selected).join(', ')}</p>
+          </div>
+        </div>
+      }
     </div>
   )
 }
